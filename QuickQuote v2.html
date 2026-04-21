@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="TK Quote"/>
+<meta name="theme-color" content="#b91c1c"/>
+<title>TK QuickQuote</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --red:#b91c1c;--red2:#dc2626;--red3:#fca5a5;
+  --bg:#0f0f0f;--c1:#1a1a1a;--c2:#222;--c3:#2a2a2a;
+  --border:#333;--border2:#444;
+  --text:#f5f5f5;--muted:#888;--muted2:#555;
+  --green:#16a34a;--blue:#1d4ed8;--amber:#d97706;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* TOP BAR */
+#bar{background:linear-gradient(135deg,#1a0a0a,#1a1a1a);border-bottom:1px solid #2a1a1a;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));display:flex;align-items:center;gap:12px;flex-shrink:0}
+.bar-tk{width:36px;height:36px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;flex-shrink:0;letter-spacing:-1px}
+.bar-info{flex:1}
+.bar-title{font-size:15px;font-weight:800;color:#fff;line-height:1}
+.bar-sub{font-size:10px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.bar-ref{font-size:10px;color:#fbbf24;font-family:var(--mono);margin-top:1px}
+.bar-saved{font-size:9px;color:var(--green);font-family:var(--mono);margin-top:1px;opacity:0;transition:opacity .3s}
+
+/* SCROLL AREA */
+#scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+
+/* BOTTOM NAV */
+#nav{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
+.nb{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;color:var(--muted);font-family:var(--font);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;position:relative;transition:color .15s}
+.nb.on{color:var(--red)}
+.nb.on::before{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;background:var(--red)}
+.nb svg{width:20px;height:20px}
+
+/* VIEWS */
+.view{display:none}.view.on{display:block}
+
+/* COMMON */
+.pad{padding:14px}
+.card{background:var(--c1);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.row2{display:flex;gap:8px}.row2>*{flex:1}
+input,select,textarea{background:var(--c2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:14px;width:100%;outline:none;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--red)}
+input::placeholder,textarea::placeholder{color:var(--muted2)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+textarea{resize:none}
+label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px}
+.btn{padding:10px 16px;border-radius:9px;border:none;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .12s;letter-spacing:.2px}
+.btn:active{transform:scale(.96)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:active{background:var(--red2)}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.btn-ghost{background:var(--c3);color:var(--text);border:none}
+.btn-green{background:var(--green);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-danger{background:transparent;border:1px solid #444;color:#ef4444}
+.btn-sm{padding:6px 10px;font-size:11px;border-radius:7px}
+.btn-block{width:100%;justify-content:center}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.sec{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px}
+
+/* DASHBOARD */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.stat{background:var(--c1);border:1px solid var(--border);border-radius:12px;padding:14px 12px;text-align:center}
+.stat-n{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
+.stat-l{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.dash-title{font-size:16px;font-weight:800}
+.filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+.filters::-webkit-scrollbar{display:none}
+.filter{font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;font-family:var(--font)}
+.filter.on{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* QUOTE CARDS IN LIST */
+.qcard{background:var(--c1);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden}
+.qcard::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.qcard.pending::after{background:#f59e0b}
+.qcard.confirmed::after{background:var(--green)}
+.qcard.completed::after{background:var(--blue)}
+.qcard.rejected::after{background:#ef4444}
+.qc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.qc-name{font-size:15px;font-weight:700}
+.qc-ref{font-family:var(--mono);font-size:11px;color:#fbbf24;font-weight:600}
+.qc-date{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.qc-site{font-size:12px;color:var(--muted);margin-bottom:10px;margin-top:2px}
+.status-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.pill{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:none;cursor:pointer;opacity:.35;transition:opacity .15s;font-family:var(--font)}
+.pill.on{opacity:1}
+.pill-p{background:#78350f;color:#fcd34d}
+.pill-c{background:#14532d;color:#6ee7b7}
+.pill-d{background:#1e3a5f;color:#93c5fd}
+.pill-r{background:#450a0a;color:#fca5a5}
+.qc-bot{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.qc-total{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--red)}
+.qc-count{font-size:11px;color:var(--muted);font-weight:600}
+.qc-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* BUILD */
+.cq-strip{background:linear-gradient(90deg,#1a0a0a,#1a1a1a);border:1px solid #3a1a1a;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.cqs-left .name{font-size:14px;font-weight:800;color:var(--red)}
+.cqs-left .ref{font-family:var(--mono);font-size:11px;color:#fbbf24;margin-top:2px}
+.cqs-left .sub{font-size:11px;color:var(--muted);margin-top:1px}
+.sbadge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-block}
+.sb-pending{background:#78350f;color:#fcd34d}
+.sb-confirmed{background:#14532d;color:#6ee7b7}
+.sb-completed{background:#1e3a5f;color:#93c5fd}
+.sb-rejected{background:#450a0a;color:#fca5a5}
+
+/* CATEGORY GRID */
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cat{background:var(--c2);border:2px solid var(--border);border-radius:10px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .12s}
+.cat.on{border-color:var(--red);background:#1a0808}
+.cat:active{transform:scale(.97)}
+.cat-icon{font-size:24px}
+.cat-name{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.3px;text-align:center}
+.cat-count{font-size:9px;color:var(--muted);font-family:var(--mono)}
+
+/* PRESET LIST */
+.preset-wrap{max-height:260px;overflow-y:auto;margin-bottom:12px}
+.preset{background:var(--c3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:5px;transition:background .1s}
+.preset:active{background:#2a1a1a}
+.preset-info{flex:1;min-width:0}
+.preset-name{font-size:13px;font-weight:600;line-height:1.3}
+.preset-unit{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:1px}
+.preset-price{font-family:var(--mono);font-size:12px;color:var(--red);white-space:nowrap;margin-right:6px}
+.preset-plus{width:28px;height:28px;background:var(--red);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:#fff;font-weight:900;line-height:1}
+.custom-box{background:var(--c2);border:1px dashed var(--border2);border-radius:9px;padding:12px;display:flex;flex-direction:column;gap:8px}
+
+/* ITEM CARDS */
+.icard{background:var(--c2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.icard.has-remark{border-left:3px solid #3b82f6}
+.ic-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px}
+.ic-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.bh{background:#431407;color:#fb923c}
+.bc{background:#052e16;color:#4ade80}
+.bm{background:#1e1b4b;color:#818cf8}
+.bp{background:#082f49;color:#38bdf8}
+.be{background:#422006;color:#fbbf24}
+.bo{background:#2e1065;color:#c084fc}
+.ic-desc{font-size:13px;font-weight:600;flex:1;line-height:1.4;word-break:break-word}
+.ic-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;flex-shrink:0;padding:0;line-height:1}
+.ic-del:active{color:#ef4444}
+.ic-grid{display:grid;grid-template-columns:60px 78px 86px 1fr;gap:6px;margin-bottom:8px}
+.ic-field input,.ic-field select{font-family:var(--mono);font-size:12px;padding:7px 8px;text-align:center}
+.ic-sub{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red);padding:7px 4px;text-align:right}
+.ic-desc-edit{width:100%;margin-bottom:8px}
+.ic-desc-edit textarea{height:50px;font-size:13px}
+.ic-remark-row{display:flex;gap:6px;align-items:flex-start}
+.ic-remark-row textarea{height:38px;font-size:12px;color:var(--muted)}
+.ic-remark-row textarea:focus{color:var(--text)}
+.ic-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ph{position:relative;flex-shrink:0}
+.ph img{width:58px;height:58px;border-radius:7px;object-fit:cover;border:1px solid var(--border);display:block;cursor:pointer}
+.ph-x{position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:#ef4444;border:none;border-radius:50%;color:#fff;font-size:10px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ph-add{width:58px;height:58px;border-radius:7px;border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);background:var(--c3);font-size:22px;flex-shrink:0}
+
+/* TOTALS */
+.tot-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.tot-row:last-child{border:none;padding-top:10px}
+.tot-l{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.tot-v{font-family:var(--mono);font-size:14px;font-weight:700}
+.tot-row.grand .tot-l{font-size:16px;color:var(--text);font-weight:800}
+.tot-row.grand .tot-v{font-size:22px;color:var(--red)}
+
+/* EXPORT */
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.exp-btn{background:var(--c2);border:2px solid var(--border);border-radius:12px;padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .12s}
+.exp-btn:active{transform:scale(.96)}
+.exp-btn.pdf{border-color:#dc2626}
+.exp-btn.xls{border-color:#16a34a}
+.exp-btn.doc{border-color:#1d4ed8}
+.exp-btn.txt{border-color:var(--border2)}
+.exp-icon{font-size:34px;line-height:1}
+.exp-name{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.exp-desc{font-size:10px;color:var(--muted);text-align:center;line-height:1.4}
+.exp-btn.pdf .exp-name{color:#dc2626}
+.exp-btn.xls .exp-name{color:#16a34a}
+.exp-btn.doc .exp-name{color:#60a5fa}
+.exp-btn.txt .exp-name{color:var(--muted)}
+
+#txtbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:var(--text);max-height:280px;overflow-y:auto;margin:10px 0}
+
+/* PHOTO MODAL */
+#phmodal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#phmodal.on{display:flex}
+#phmodal img{max-width:94vw;max-height:78vh;border-radius:10px;object-fit:contain}
+#phmodal-close{background:var(--red);border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
+
+/* SPINNER */
+#spin{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#spin.on{display:flex}
+.spin-ring{width:44px;height:44px;border:4px solid var(--border2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#spin-label{font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px}
+
+/* TOAST */
+#toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--green);color:#fff;padding:9px 20px;border-radius:28px;font-size:13px;font-weight:700;opacity:0;transition:all .22s;pointer-events:none;z-index:700;white-space:nowrap;letter-spacing:.2px}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:13px;line-height:1.7}
+
+/* INSTALL */
+#ibanner{display:none;background:linear-gradient(135deg,#1a0a0a,#1a1500);border:1px solid #3a2a00;border-radius:10px;padding:12px 14px;margin-bottom:12px;align-items:center;gap:10px}
+#ibanner.on{display:flex}
+#ibanner p{font-size:12px;color:var(--text);flex:1;line-height:1.5}
+#ibanner b{color:#fbbf24}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div id="bar">
+    <div class="bar-tk">TK</div>
+    <div class="bar-info">
+      <div class="bar-title">QuickQuote</div>
+      <div class="bar-sub">TK Contractors Pte. Ltd.</div>
+      <div class="bar-ref" id="bar-ref"></div>
+      <div class="bar-saved" id="bar-saved">✓ Autosaved</div>
+    </div>
+    <div>
+      <button class="btn btn-red btn-sm" onclick="App.goExport()">⬇ Export</button>
+    </div>
+  </div>
+
+  <!-- SCROLL -->
+  <div id="scroll">
+
+    <!-- DASHBOARD -->
+    <div class="view on" id="v-dash">
+      <div class="pad">
+        <div id="ibanner">
+          <span style="font-size:22px">📱</span>
+          <p>iOS: tap <b>Share → Add to Home Screen</b>&nbsp; Android: tap <b>⋮ → Install App</b></p>
+          <button class="btn btn-red btn-sm" id="ibtn" style="display:none" onclick="App.install()">Install</button>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="dash-header">
+          <div class="dash-title">Quotations</div>
+          <button class="btn btn-red btn-sm" onclick="App.newQuote()">+ New</button>
+        </div>
+        <div class="filters">
+          <button class="filter on" id="f-all" onclick="App.filter('all')">All</button>
+          <button class="filter" id="f-pending" onclick="App.filter('pending')">⏳ Pending</button>
+          <button class="filter" id="f-confirmed" onclick="App.filter('confirmed')">✅ Confirmed</button>
+          <button class="filter" id="f-completed" onclick="App.filter('completed')">🔵 Completed</button>
+          <button class="filter" id="f-rejected" onclick="App.filter('rejected')">❌ Rejected</button>
+        </div>
+        <div id="qlist"></div>
+      </div>
+    </div>
+
+    <!-- BUILD -->
+    <div class="view" id="v-build">
+      <div class="pad">
+        <div class="cq-strip">
+          <div class="cqs-left">
+            <div class="name" id="cq-name">New Quote</div>
+            <div class="ref" id="cq-ref"></div>
+            <div class="sub" id="cq-sub">Draft</div>
+          </div>
+          <span class="sbadge sb-pending" id="cq-badge">⏳ Pending</span>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Quote Details</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div><label>Client / Owner Name *</label><input id="i-client" type="text" placeholder="e.g. Mr. Ahmad" autocomplete="off"/></div>
+            <div><label>Client HP / Contact</label><input id="i-hp" type="tel" placeholder="e.g. 9123 4567" autocomplete="off"/></div>
+            <div><label>Attn</label><input id="i-attn" type="text" placeholder="e.g. Owner" autocomplete="off"/></div>
+            <div><label>Site Address / Subject</label><input id="i-site" type="text" placeholder="e.g. Blk 123 Tampines St 11 #05-06" autocomplete="off"/></div>
+            <div class="row2">
+              <div><label>Ref No.</label><input id="i-ref" type="text" readonly style="color:#fbbf24;font-family:var(--mono);font-size:13px;cursor:default"/></div>
+              <div><label>Date</label><input id="i-date" type="date"/></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Select Category</div>
+          <div class="cats" id="cats">
+            <div class="cat" id="cat-hacking" onclick="App.selectCat('hacking')"><span class="cat-icon">🔨</span><span class="cat-name">Hacking</span><span class="cat-count" id="cc-hacking"></span></div>
+            <div class="cat" id="cat-carpentry" onclick="App.selectCat('carpentry')"><span class="cat-icon">🪵</span><span class="cat-name">Carpentry</span><span class="cat-count" id="cc-carpentry"></span></div>
+            <div class="cat" id="cat-masonry" onclick="App.selectCat('masonry')"><span class="cat-icon">🧱</span><span class="cat-name">Masonry</span><span class="cat-count" id="cc-masonry"></span></div>
+            <div class="cat" id="cat-plumbing" onclick="App.selectCat('plumbing')"><span class="cat-icon">🔧</span><span class="cat-name">Plumbing</span><span class="cat-count" id="cc-plumbing"></span></div>
+            <div class="cat" id="cat-electrical" onclick="App.selectCat('electrical')"><span class="cat-icon">⚡</span><span class="cat-name">Electrical</span><span class="cat-count" id="cc-electrical"></span></div>
+            <div class="cat" id="cat-other" onclick="App.selectCat('other')"><span class="cat-icon">🛠️</span><span class="cat-name">Other</span><span class="cat-count" id="cc-other"></span></div>
+          </div>
+        </div>
+
+        <div class="card" id="preset-panel" style="display:none">
+          <div class="card-title" id="preset-title">Items</div>
+          <div class="preset-wrap" id="preset-list"></div>
+          <div class="divider"></div>
+          <div class="sec">✏️ Custom Item</div>
+          <div class="custom-box">
+            <div><label>Description *</label><textarea id="cf-desc" placeholder="Describe the work..." style="height:50px"></textarea></div>
+            <div style="display:grid;grid-template-columns:58px 86px 1fr;gap:7px">
+              <div><label>Qty</label><input id="cf-qty" type="number" value="1" min="0" step="any" style="text-align:center;font-family:var(--mono)"/></div>
+              <div><label>Unit</label>
+                <select id="cf-unit">
+                  <option>NOS</option><option>JOB</option><option>FT</option>
+                  <option>m²</option><option>Sqft</option><option>m</option>
+                  <option>Set</option><option>Lot</option><option>Day</option>
+                  <option>Hr</option><option>Step</option>
+                </select>
+              </div>
+              <div><label>Unit Price ($)</label><input id="cf-price" type="number" placeholder="0.00" min="0" step="0.01" style="font-family:var(--mono)"/></div>
+            </div>
+            <div><label>Remark (optional)</label><input id="cf-remark" type="text" placeholder="Any notes..." autocomplete="off"/></div>
+            <button class="btn btn-red btn-block" onclick="App.addCustom()">+ Add to Quote</button>
+          </div>
+        </div>
+
+        <div id="items-wrap" style="display:none">
+          <div class="sec" id="items-sec-title">Quote Items</div>
+          <div id="ilist"></div>
+          <div class="card">
+            <div class="card-title">Overall Remarks / Conditions</div>
+            <textarea id="i-remark" placeholder="Payment terms, validity, exclusions, conditions..." style="height:70px"></textarea>
+          </div>
+          <div class="card">
+            <div class="card-title">Summary</div>
+            <div id="cat-summary"></div>
+            <div class="divider"></div>
+            <div class="tot-row grand">
+              <span class="tot-l">Grand Total</span>
+              <span class="tot-v" id="grand-total">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="view" id="v-export">
+      <div class="pad">
+        <div class="card">
+          <div class="card-title">Export Format</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">PDF includes your site photos next to each item. Word &amp; Excel open on your computer.</p>
+          <div class="exp-grid">
+            <div class="exp-btn pdf" onclick="App.exportPDF()">
+              <div class="exp-icon">📄</div>
+              <div class="exp-name">PDF</div>
+              <div class="exp-desc">Premium layout, company header, photos</div>
+            </div>
+            <div class="exp-btn xls" onclick="App.exportExcel()">
+              <div class="exp-icon">📊</div>
+              <div class="exp-name">Excel</div>
+              <div class="exp-desc">Editable spreadsheet, all items &amp; totals</div>
+            </div>
+            <div class="exp-btn doc" onclick="App.exportWord()">
+              <div class="exp-icon">📝</div>
+              <div class="exp-name">Word</div>
+              <div class="exp-desc">MS Word .docx, same layout as your quote</div>
+            </div>
+            <div class="exp-btn txt" onclick="App.exportText()">
+              <div class="exp-icon">📋</div>
+              <div class="exp-name">Text</div>
+              <div class="exp-desc">Copy &amp; paste to WhatsApp or email</div>
+            </div>
+          </div>
+        </div>
+        <div id="txt-card" style="display:none" class="card">
+          <div class="card-title">Text — Copy to Clipboard</div>
+          <button class="btn btn-red btn-block" onclick="App.copyText()" style="margin-bottom:8px">📋 Copy</button>
+          <div id="txtbox"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- NAV -->
+  <div id="nav">
+    <button class="nb on" id="nb-dash" onclick="App.go('dash')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nb" id="nb-build" onclick="App.go('build')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Build
+    </button>
+    <button class="nb" id="nb-export" onclick="App.go('export')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+  </div>
+
+</div>
+
+<!-- PHOTO MODAL -->
+<div id="phmodal"><img id="phimg" src="" alt=""/><button id="phmodal-close" onclick="App.closePM()">✕</button></div>
+<input type="file" id="file-input" accept="image/*" capture="environment" style="display:none" onchange="App.handlePhoto(event)"/>
+
+<!-- SPINNER -->
+<div id="spin"><div class="spin-ring"></div><div id="spin-label">Generating...</div></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════
+const CO = {
+  name:'TK CONTRACTORS PTE. LTD.',
+  reg:'201913388R',
+  addr:'M-Space, #03-12, 6D Mandai Estate, S729938',
+  email:'enquiry@tkcontractors.sg',
+  hp:'9115 8246',
+  gst:'201913388R'
+};
+
+const CATS = {
+  hacking:  {label:'Hacking Work',    icon:'🔨', badge:'bh'},
+  carpentry:{label:'Carpentry Work',  icon:'🪵', badge:'bc'},
+  masonry:  {label:'Masonry Work',    icon:'🧱', badge:'bm'},
+  plumbing: {label:'Plumbing Work',   icon:'🔧', badge:'bp'},
+  electrical:{label:'Electrical Work',icon:'⚡', badge:'be'},
+  other:    {label:'Other Works',     icon:'🛠️', badge:'bo'},
+};
+
+const PRESETS = {
+  hacking:[
+    {n:'Hacking works',d:'Supply labour, tools and material to hack and dispose',q:1,u:'JOB',p:null},
+    {n:'Make good after hacking',d:'Make good after hacking works',q:1,u:'JOB',p:null},
+    {n:'HDB Permit',d:'Application of HDB permit',q:1,u:'JOB',p:350},
+    {n:'PE Endorsement',d:'PE Endorsement',q:1,u:'JOB',p:null},
+  ],
+  carpentry:[
+    {n:'Top Cabinet',d:'Design, fabricate and install top cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:150},
+    {n:'Bottom Cabinet',d:'Design, fabricate and install bottom cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:150},
+    {n:'Table Top – Quartz (600mm)',d:'Supply and install table top Quartz single profile 20mm thk',q:1,u:'FT',p:120},
+    {n:'Table Top – Sintered Stone (600mm)',d:'Supply and install table top Sintered Stone',q:1,u:'FT',p:180},
+    {n:'Table Top – Solid Surface (600mm)',d:'Supply and install solid surface table top',q:1,u:'FT',p:120},
+    {n:'Tall Unit (8ft)',d:'Design, fabricate and install tall unit, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Tall Unit (over 8ft)',d:'Design, fabricate and install tall unit over 8ft, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:420},
+    {n:'Fridge Top Cabinet',d:'Design, fabricate and install fridge top cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:250},
+    {n:'Kitchen Island (600mm)',d:'Design, fabricate and install kitchen island 600mm, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:300},
+    {n:'Kitchen Island (900mm)',d:'Design, fabricate and install kitchen island 900mm, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:400},
+    {n:'Bar Counter',d:'Design, fabricate and install bar counter cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Top Vanity Cabinet',d:'Design, fabricate and install top vanity cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:150},
+    {n:'Bottom Vanity Cabinet',d:'Design, fabricate and install bottom vanity cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:150},
+    {n:'Top Vanity Cabinet (Marine ply)',d:'Design, fabricate and install top vanity cabinet c/w marine plywood, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:170},
+    {n:'Bottom Vanity Cabinet (Marine ply)',d:'Design, fabricate and install bottom vanity cabinet c/w marine plywood, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:170},
+    {n:'Top Vanity Cabinet c/w Mirror',d:'Design, fabricate and install top vanity cabinet c/w mirror, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:270},
+    {n:'Half Height Shoe Cabinet (4ft)',d:'Design, fabricate and install half height shoe cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:200},
+    {n:'Full Height Shoe Cabinet (8ft)',d:'Design, fabricate and install full height shoe cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:300},
+    {n:'Full Height Shoe Cabinet (over 8ft)',d:'Design, fabricate and install full height shoe cabinet over 8ft, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Shoe Cabinet + Settee (no cushion)',d:'Design, fabricate and install shoe cabinet with settee, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Shoe Cabinet + Settee (with cushion)',d:'Design, fabricate and install shoe cabinet with settee c/w cushion, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:400},
+    {n:'TV Console',d:'Design, fabricate and install TV console, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:200},
+    {n:'TV Console + Feature Wall',d:'Design, fabricate and install TV console c/w feature wall, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Full Height Feature Wall',d:'Design, fabricate and install feature wall',q:1,u:'FT',p:200},
+    {n:'Feature Wall with Laminate',d:'Design, fabricate and install feature wall, solid-ply high grade laminates',q:1,u:'FT',p:300},
+    {n:'Fluted Panel (no ply backing)',d:'Design, fabricate and install feature wall c/w fluted panels, solid-ply high grade laminates',q:1,u:'FT',p:200},
+    {n:'Fluted Panel (with ply backing)',d:'Design, fabricate and install feature wall c/w fluted panels with plywood backing, solid-ply high grade laminates',q:1,u:'FT',p:380},
+    {n:'Display Cabinet (8ft)',d:'Design, fabricate and install display cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:400},
+    {n:'Display Cabinet c/w Glass Door',d:'Design, fabricate and install display cabinet c/w glass door, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:550},
+    {n:'Display Cabinet c/w Glass Door + Alu Frame',d:'Design, fabricate and install display cabinet c/w glass door and aluminium frame, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:750},
+    {n:'Full Height Cabinet (8ft)',d:'Design, fabricate and install full height cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Full Height Cabinet (over 8ft)',d:'Design, fabricate and install full height cabinet over 8ft, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:420},
+    {n:'Full Height Casement Wardrobe (8ft)',d:'Design, fabricate and install casement wardrobe, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Full Height Casement Wardrobe (over 8ft)',d:'Design, fabricate and install casement wardrobe over 8ft, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:420},
+    {n:'Full Height Sliding Wardrobe (8ft)',d:'Design, fabricate and install sliding wardrobe, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Full Height Sliding Wardrobe (over 8ft)',d:'Design, fabricate and install sliding wardrobe over 8ft, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:420},
+    {n:'King Bedframe + 2 Drawers (6ft)',d:'Design, fabricate and install king size bedframe c/w drawers, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'NOS',p:2100},
+    {n:'Queen Bedframe + 2 Drawers (5ft)',d:'Design, fabricate and install queen size bedframe c/w drawers, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'NOS',p:1750},
+    {n:'Single Bedframe + 2 Drawers (4ft)',d:'Design, fabricate and install single size bedframe c/w drawers, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'NOS',p:1400},
+    {n:'King Bedframe + Drawers + Bedhead (6ft)',d:'Design, fabricate and install king size bedframe c/w drawers and bedhead, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'NOS',p:3000},
+    {n:'Queen Bedframe + Drawers + Bedhead (5ft)',d:'Design, fabricate and install queen size bedframe c/w drawers and bedhead, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'NOS',p:2500},
+    {n:'Single Bedframe + Drawers + Bedhead (4ft)',d:'Design, fabricate and install single size bedframe c/w drawers and bedhead, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'NOS',p:2000},
+    {n:'Dressing Table c/w Mirror',d:'Design, fabricate and install dressing table c/w mirror, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:350},
+    {n:'Study Table',d:'Design, fabricate and install study table, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:180},
+    {n:'Bay Window Cabinet',d:'Design, fabricate and install bay window cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:170},
+    {n:'Sitting Bench',d:'Design, fabricate and install sitting bench, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:180},
+    {n:'Sitting Bench (with cushion)',d:'Design, fabricate and install sitting bench c/w cushion, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:230},
+    {n:'Counter Cabinet',d:'Design, fabricate and install counter cabinet, solid-ply high grade laminates, ABS trimming and soft closing',q:1,u:'FT',p:400},
+    {n:'Laminated Door c/w Painted Frame',d:'Supply and install laminated door c/w painted door frame',q:1,u:'NOS',p:1200},
+    {n:'Laminated Door c/w Laminated Frame',d:'Supply and install laminated door c/w laminated door frame',q:1,u:'NOS',p:1500},
+    {n:'Cushion',d:'Supply and install cushion',q:1,u:'Sqft',p:50},
+    {n:'Curve/Round Corner (full height)',d:'c/w curve corner detail',q:1,u:'FT',p:200},
+    {n:'Additional Tic-Tac Door',d:'Supply and install Tic-Tac door',q:1,u:'NOS',p:300},
+    {n:'BLUM Drawer Tracks',d:'Supply and install BLUM drawer tracks',q:1,u:'NOS',p:80},
+    {n:'BLUM Hinge',d:'Supply and install BLUM hinges',q:1,u:'NOS',p:10},
+    {n:'Shaker Design c/w Glass Door',d:'Shaker design c/w glass door',q:1,u:'FT',p:150},
+    {n:'Shaker Design',d:'Shaker design',q:1,u:'FT',p:100},
+    {n:'Full Height Box Up',d:'Design, fabricate and install full height box up',q:1,u:'FT',p:350},
+    {n:'Full Height Book Shelf',d:'Design, fabricate and install full height book shelf',q:1,u:'FT',p:350},
+    {n:'Half Height Book Shelf',d:'Design, fabricate and install half height book shelf',q:1,u:'FT',p:250},
+  ],
+  masonry:[
+    {n:'Bathroom Wall & Floor Tiles (owner supply)',d:'Supply labour, tools and material to lay wall and floor tiles c/w waterproofing works for bathroom (owner supply tiles)',q:1,u:'JOB',p:3200},
+    {n:'Bathroom Floor Tiles Overlay (owner supply)',d:'Supply labour, tools and material to overlay floor tiles at bathroom (owner supply tiles)',q:1,u:'JOB',p:1200},
+    {n:'Bathroom Wall Tiles (owner supply)',d:'Supply labour, tools and material to lay wall tiles at bathroom (owner supply tiles)',q:1,u:'JOB',p:2000},
+    {n:'Kitchen Wall & Floor Tiles (owner supply)',d:'Supply labour, tools and material to lay wall and floor tiles c/w waterproofing works for kitchen (owner supply tiles)',q:1,u:'JOB',p:4800},
+    {n:'Kitchen Floor Tiles Overlay (owner supply)',d:'Supply labour, tools and material to overlay floor tiles at kitchen (owner supply tiles)',q:1,u:'JOB',p:1800},
+    {n:'Kitchen Wall Tiles (owner supply)',d:'Supply labour, tools and material to lay wall tiles at kitchen (owner supply tiles)',q:1,u:'JOB',p:3000},
+    {n:'Kitchen Wall Plaster',d:'Supply labour, tools and material to plaster walls of existing kitchen',q:1,u:'JOB',p:1850},
+    {n:'Bathroom Wall Plaster',d:'Supply labour, tools and material to plaster walls of bathroom',q:1,u:'JOB',p:1400},
+    {n:'Service Yard Floor Tiles (owner supply)',d:'Supply labour, tools and material to lay floor tiles at service yard (owner supply tiles)',q:1,u:'JOB',p:1250},
+    {n:'Lay Floor Tiles (owner supply)',d:'Supply labour, tools and material to lay floor tiles (owner supply tiles)',q:1,u:'Sqft',p:10},
+    {n:'Concrete Base for Kitchen Cabinet',d:'Supply labour, tools and material to construct concrete base for kitchen cabinet (owner supply tiles)',q:1,u:'FT',p:50},
+    {n:'Shower Kerb',d:'Supply labour, tools and material to construct shower kerb for bathroom',q:1,u:'JOB',p:250},
+    {n:'Cement Screeding',d:'Supply labour, tools and materials to cement screed flooring',q:1,u:'Sqft',p:4},
+    {n:'Brick Wall (1\' x 8\')',d:'Supply labour, tools and material to construct brick wall',q:1,u:'FT',p:350},
+    {n:'Concrete Sink Structure (3ft) c/w 2 Doors',d:'Supply labour, tools and material to construct bottom sink structure c/w tiling works and aluminium sliding doors',q:1,u:'JOB',p:1950},
+    {n:'Partition Wall 75mm',d:'Supply and install partition wall 75mm thk',q:1,u:'Sqft',p:7},
+    {n:'Partition Wall 75mm + Rock Wool 80kg',d:'Supply and install partition wall 75mm c/w 80kgs rock wool',q:1,u:'Sqft',p:10},
+    {n:'Door / Panel Support',d:'Supply and install door support / panel support',q:1,u:'NOS',p:200},
+    {n:'False Ceiling',d:'Supply and install false ceiling',q:1,u:'Sqft',p:5.20},
+    {n:'L-Box and Cove',d:'Supply and install L-box and cove ceiling at living room',q:1,u:'FT',p:20},
+    {n:'L-Box Ceiling',d:'Supply and install L-box',q:1,u:'FT',p:20},
+    {n:'Bathroom Ceiling (1 nos)',d:'Supply and install bathroom ceiling for 1 bathroom',q:1,u:'JOB',p:600},
+    {n:'Access Panel',d:'Supply and install access panel',q:1,u:'JOB',p:120},
+    {n:'Vinyl Flooring (incl. 10% wastage)',d:'Supply and install vinyl flooring for whole unit (5mm thickness)',q:1,u:'Sqft',p:6.50},
+    {n:'Carpet Flooring',d:'Supply and install carpet flooring for whole unit (6mm thickness)',q:1,u:'Sqft',p:4},
+    {n:'3-Room HDB Whole Unit Painting',d:'Supply labour, tools and material to paint whole unit (Nippon Vinilex 5000 / Nippon Matex White)',q:1,u:'JOB',p:1500},
+    {n:'4-Room HDB Whole Unit Painting',d:'Supply labour, tools and material to paint whole unit (Nippon Vinilex 5000 / Nippon Matex White)',q:1,u:'JOB',p:1800},
+    {n:'5-Room HDB Whole Unit Painting',d:'Supply labour, tools and material to paint whole unit (Nippon Vinilex 5000 / Nippon Matex White)',q:1,u:'JOB',p:2200},
+    {n:'Bedroom Parquet Polishing & Varnishing',d:'Supply labour, tools and material to polish parquet flooring for bedroom',q:1,u:'JOB',p:550},
+    {n:'Living Room Marble Polishing & Varnishing',d:'Supply labour, tools and material to marble polish for living room',q:1,u:'JOB',p:1400},
+    {n:'Staircase Parquet Polishing',d:'Supply labour, tools and material to polish staircase parquet flooring',q:1,u:'Step',p:100},
+    {n:'Glass Backing',d:'Supply and install glass backing',q:1,u:'FT',p:110},
+    {n:'Mirror c/w Plywood Backing',d:'Supply and install full height mirror c/w plywood backing',q:1,u:'Sqft',p:30},
+  ],
+  plumbing:[
+    {n:'Conceal Piping – 1 Bathroom',d:'Supply labour, tools and material to hack and conceal piping for 1 bathroom',q:1,u:'JOB',p:900},
+    {n:'Surface Piping – 1 Bathroom',d:'Supply labour, tools and material to install stainless steel surface piping for 1 bathroom',q:1,u:'JOB',p:600},
+    {n:'Bathroom Accessories Installation',d:'Supply labour, tools and materials to install bathroom accessories, WC, shower head for 1 bathroom (owner supply)',q:1,u:'JOB',p:400},
+    {n:'WC Installation',d:'Supply labour, tools and materials to install WC (owner supply)',q:1,u:'JOB',p:150},
+    {n:'Shower Head / Mixer / Rain Shower',d:'Supply labour, tools and materials to install shower head / mixer / rain shower (owner supply)',q:1,u:'JOB',p:150},
+    {n:'Instant Heater Installation',d:'Installation of instant heater',q:1,u:'JOB',p:60},
+    {n:'Storage Heater (False Ceiling)',d:'Supply labour, tools and materials to install storage heater tank (owner supply)',q:1,u:'JOB',p:380},
+    {n:'Storage Heater (Exposed)',d:'Supply labour, tools and materials to install storage heater tank exposed (owner supply)',q:1,u:'JOB',p:220},
+    {n:'Inlet/Outlet – Wash Basin',d:'Supply labour, tools and materials to install inlet and outlet piping for wash basin',q:1,u:'JOB',p:250},
+    {n:'Inlet/Outlet – Kitchen Sink',d:'Supply labour, tools and materials to install inlet and outlet piping for kitchen sink',q:1,u:'JOB',p:280},
+    {n:'Inlet/Outlet – Washing Machine',d:'Supply labour, tools and materials to install inlet and outlet piping for washing machine',q:1,u:'JOB',p:280},
+    {n:'Inlet/Outlet – Dishwasher',d:'Supply labour, tools and materials to install inlet and outlet piping for dishwasher',q:1,u:'JOB',p:280},
+    {n:'Change Main Inlet Piping',d:'Supply labour, tools and materials to install main inlet piping',q:1,u:'JOB',p:900},
+    {n:'Wash Basin and Tap Installation',d:'Supply labour and tools to install wash basin and tap',q:1,u:'JOB',p:150},
+    {n:'Kitchen Sink and Tap Installation',d:'Supply labour and tools to install kitchen sink and tap',q:1,u:'JOB',p:180},
+    {n:'Dismantle & Install Exposed Bathroom Piping',d:'Supply labour, tools and material to dismantle and install exposed bathroom piping',q:1,u:'JOB',p:600},
+  ],
+  electrical:[
+    {n:'13A Single Power Point Socket',d:'Supply and install 13A single power point socket',q:1,u:'NOS',p:null},
+    {n:'13A Double Power Point Socket',d:'Supply and install 13A double power point socket',q:1,u:'NOS',p:null},
+    {n:'Lighting / Fan Point c/w Switch',d:'Supply and install lighting/fan point c/w switch',q:1,u:'NOS',p:null},
+    {n:'Two Way Light Switches',d:'Supply and install two way light switches',q:1,u:'NOS',p:null},
+    {n:'Data Socket (Cat 6)',d:'Supply and install data socket (Cat 6 cable)',q:1,u:'NOS',p:null},
+    {n:'Hood Point',d:'Supply and install hood point',q:1,u:'NOS',p:null},
+    {n:'Hob Point',d:'Supply and install hob point',q:1,u:'NOS',p:null},
+    {n:'Oven Point',d:'Supply and install oven point',q:1,u:'NOS',p:null},
+    {n:'Heater Point + Connection',d:'Supply and install heater point and connection of heater',q:1,u:'NOS',p:null},
+    {n:'15A AC Point',d:'Supply and install 15A AC point',q:1,u:'NOS',p:null},
+    {n:'20A Single Phase Isolator',d:'Supply and install 20A single phase isolator',q:1,u:'NOS',p:null},
+    {n:'Installation of Lighting',d:'Installation of lighting',q:1,u:'NOS',p:null},
+    {n:'Installation of Track Lighting',d:'Installation of track lighting',q:1,u:'NOS',p:null},
+    {n:'Installation of Pendant Light',d:'Installation of pendant light fitting',q:1,u:'NOS',p:null},
+    {n:'Installation of Wall Fan',d:'Installation of wall fan',q:1,u:'NOS',p:null},
+    {n:'Installation of Ceiling Fan',d:'Installation of ceiling fan',q:1,u:'NOS',p:null},
+    {n:'LED Strip c/w Driver',d:'Supply and install LED strip c/w driver',q:1,u:'NOS',p:null},
+    {n:'Outgoing Point to LED Strip',d:'Supply and install outgoing point to LED strip',q:1,u:'NOS',p:null},
+    {n:'Door Bell',d:'Install door bell',q:1,u:'NOS',p:null},
+    {n:'Conceal Work c/w Plastering (per point)',d:'Conceal work c/w plastering (per point)',q:1,u:'NOS',p:null},
+    {n:'Replace 13A Double Socket',d:'Supply and replace 13A double power point socket',q:1,u:'NOS',p:null},
+    {n:'Replace 13A Single Socket',d:'Supply and replace 13A single power point socket',q:1,u:'NOS',p:null},
+    {n:'Replace 15A Aircon Socket',d:'Supply and replace 15A aircon socket',q:1,u:'NOS',p:null},
+    {n:'Replace 20A Heater Switch',d:'Supply and replace 20A heater switch',q:1,u:'NOS',p:null},
+    {n:'Replace 20A Ceiling Rose',d:'Supply and replace 20A ceiling rose',q:1,u:'NOS',p:null},
+    {n:'Replace One Gang Switch',d:'Supply and replace one gang switch',q:1,u:'NOS',p:null},
+    {n:'Replace Two Gang Switch',d:'Supply and replace two gang switch',q:1,u:'NOS',p:null},
+    {n:'Replace Three Gang Switch',d:'Supply and replace three gang switch',q:1,u:'NOS',p:null},
+    {n:'Data Socket (Single Output)',d:'Supply and replace data socket (single output)',q:1,u:'NOS',p:null},
+    {n:'Transportation (work < $1000)',d:'Transportation for work less than $1000',q:1,u:'JOB',p:null},
+    {n:'DB Box',d:'Supply and install DB box',q:1,u:'JOB',p:null},
+    {n:'Splash Cover (Single)',d:'Supply and install splash cover (single)',q:1,u:'NOS',p:null},
+    {n:'Splash Cover (Double)',d:'Supply and install splash cover (double)',q:1,u:'NOS',p:null},
+    {n:'Blank Faceplate (Single)',d:'Supply and install blank faceplate (single)',q:1,u:'NOS',p:null},
+    {n:'Blank Faceplate (Double)',d:'Supply and install blank faceplate (double)',q:1,u:'NOS',p:null},
+    {n:'Ceiling Cove Lighting (per length)',d:'Installation of ceiling cove lighting (per length)',q:1,u:'NOS',p:null},
+    {n:'Dismantle Socket/Switch c/w Plastering',d:'Dismantle socket/switch c/w plastering works',q:1,u:'NOS',p:null},
+    {n:'Troubleshooting + Transportation',d:'Initial troubleshooting works and transportation',q:1,u:'JOB',p:null},
+    {n:'Data Socket (Cat 6A)',d:'Supply and install data socket (Cat 6A cable)',q:1,u:'NOS',p:null},
+    {n:'Neutral Cable',d:'Supply and install neutral cable',q:1,u:'NOS',p:null},
+  ],
+  other:[
+    {n:'Cleaning & Protection',d:'Supply and install protection covers and clearing of rubbish. General cleaning and washing after renovation works. Haulage of materials to site',q:1,u:'JOB',p:150},
+    {n:'Dish Rack',d:'Supply and install stainless steel dish rack',q:1,u:'NOS',p:150},
+    {n:'Slide & Swing Door – Toilet',d:'Supply and install slide and swing doors for toilet',q:1,u:'NOS',p:580},
+    {n:'Shower Screen',d:'Supply and install shower screen at bathroom',q:1,u:'NOS',p:700},
+    {n:'Sliding Window',d:'Supply and install sliding windows',q:1,u:'Sqft',p:30},
+    {n:'Casement Window',d:'Supply and install casement windows',q:1,u:'Sqft',p:30},
+    {n:'Window Grille (Aluminium)',d:'Supply and install aluminium window grille',q:1,u:'Sqft',p:15},
+    {n:'Invisible Window Grille (SS)',d:'Supply and install stainless steel invisible window grille',q:1,u:'Sqft',p:36},
+    {n:'Glass Swing Door',d:'Supply and install glass swing door',q:1,u:'NOS',p:1200},
+    {n:'Glass Sliding Door',d:'Supply and install glass sliding door',q:1,u:'NOS',p:1500},
+    {n:'Acrylic Signage Panel',d:'Supply and install acrylic signage panel',q:1,u:'NOS',p:600},
+    {n:'Portable Scaffolding',d:'Supply and install portable scaffolding',q:1,u:'JOB',p:450},
+    {n:'Scissor Lift (6m)',d:'Supply and install scissor lift',q:1,u:'JOB',p:950},
+    {n:'Workstation + Pedestal + Chairs',d:'Supply and install workstation, mobile pedestal and chairs',q:1,u:'NOS',p:950},
+    {n:'Folding Windows',d:'Supply and install folding windows',q:1,u:'FT',p:45},
+    {n:'Compressor Brackets',d:'Supply and install compressor brackets',q:1,u:'NOS',p:null},
+    {n:'AC Sys 1 – 9K BTU (Mitsubishi Starmex)',d:'Supply and install AC system 1, Mitsubishi Starmex, 9K BTU',q:1,u:'JOB',p:1800},
+    {n:'AC Sys 1 – 12K BTU',d:'Supply and install AC system 1, Mitsubishi Starmex, 12K BTU',q:1,u:'JOB',p:null},
+    {n:'AC Sys 1 – 18K BTU',d:'Supply and install AC system 1, Mitsubishi Starmex, 18K BTU',q:1,u:'JOB',p:null},
+    {n:'AC Sys 2 – 9K/9K (Mitsubishi Starmex)',d:'Supply and install AC system 2, Mitsubishi Starmex - 9K/9K',q:1,u:'JOB',p:3200},
+    {n:'AC Sys 2 – 9K/12K',d:'Supply and install AC system 2, Mitsubishi Starmex - 9K/12K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 2 – 12K/12K',d:'Supply and install AC system 2, Mitsubishi Starmex - 12K/12K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 2 – 12K/18K',d:'Supply and install AC system 2, Mitsubishi Starmex - 12K/18K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 2 – 18K/18K',d:'Supply and install AC system 2, Mitsubishi Starmex - 18K/18K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 3 – 9K/9K/9K',d:'Supply and install AC system 3, Mitsubishi Starmex - 9K/9K/9K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 3 – 9K/12K/12K',d:'Supply and install AC system 3, Mitsubishi Starmex - 9K/12K/12K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 3 – 9K/12K/18K',d:'Supply and install AC system 3, Mitsubishi Starmex - 9K/12K/18K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 3 – 12K/12K/12K',d:'Supply and install AC system 3, Mitsubishi Starmex - 12K/12K/12K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 3 – 12K/12K/18K',d:'Supply and install AC system 3, Mitsubishi Starmex - 12K/12K/18K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 3 – 12K/18K/18K',d:'Supply and install AC system 3, Mitsubishi Starmex - 12K/18K/18K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 3 – 18K/18K/18K',d:'Supply and install AC system 3, Mitsubishi Starmex - 18K/18K/18K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 4 – 9K/9K/9K/9K',d:'Supply and install AC system 4, Mitsubishi Starmex - 9K/9K/9K/9K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 4 – 9K/9K/12K/12K',d:'Supply and install AC system 4, Mitsubishi Starmex - 9K/9K/12K/12K',q:1,u:'JOB',p:null},
+    {n:'AC Sys 4 – 9K/9K/12K/18K',d:'Supply and install AC system 4, Mitsubishi Starmex - 9K/9K/12K/18K',q:1,u:'JOB',p:5600},
+    {n:'AC Ceiling Cassette 24K BTU',d:'Supply and install AC ceiling cassette, Mitsubishi Starmex - 24K BTU',q:1,u:'JOB',p:4200},
+    {n:'Hood and Hob Installation',d:'Installation of hood and hob',q:1,u:'JOB',p:250},
+    {n:'Ventilation Fan c/w Glass',d:'Supply and install ventilation fan c/w glass',q:1,u:'JOB',p:450},
+    {n:'Chemical Wash (Toilet)',d:'Supply labour, tools, and materials to carry out chemical washing for the whole toilet',q:1,u:'JOB',p:350},
+  ]
+};
+
+const STATUS_LABELS = {pending:'⏳ Pending',confirmed:'✅ Confirmed',completed:'🔵 Completed',rejected:'❌ Rejected'};
+const STATUS_BADGE  = {pending:'sb-pending',confirmed:'sb-confirmed',completed:'sb-completed',rejected:'sb-rejected'};
+const fmt = n => n.toLocaleString('en-SG',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ════════════════════════════════════════════════
+// APP OBJECT
+// ════════════════════════════════════════════════
+const App = (function(){
+
+  let quotes = [];
+  let draft  = {client:'',hp:'',attn:'',site:'',ref:'',date:'',items:[],remark:'',status:'pending'};
+  let cid    = null; // current quote id
+  let selCat = null;
+  let photoTarget = null;
+  let filterMode  = 'all';
+  let autoTimer   = null;
+  let deferredPWA = null;
+  let refNum      = 1;
+
+  // ── INIT ──
+  function init(){
+    try{ quotes = JSON.parse(localStorage.getItem('tq_quotes')||'[]'); } catch(e){ quotes=[]; }
+    refNum = parseInt(localStorage.getItem('tq_ref')||'1');
+    draft.date = new Date().toISOString().split('T')[0];
+    document.getElementById('i-date').value = draft.date;
+    _assignRef();
+    _renderDash();
+    _setupPWA();
+  }
+
+  function _assignRef(){
+    draft.ref = 'Q' + String(refNum).padStart(3,'0');
+    document.getElementById('i-ref').value = draft.ref;
+    document.getElementById('bar-ref').textContent = draft.ref;
+    document.getElementById('cq-ref').textContent  = draft.ref;
+  }
+
+  function _nextRef(){
+    refNum++;
+    localStorage.setItem('tq_ref', refNum);
+    _assignRef();
+  }
+
+  function _setupPWA(){
+    window.addEventListener('beforeinstallprompt', e=>{
+      e.preventDefault(); deferredPWA=e;
+      document.getElementById('ibanner').classList.add('on');
+      document.getElementById('ibtn').style.display='flex';
+    });
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+    const sa  = window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+    if(ios&&!sa) document.getElementById('ibanner').classList.add('on');
+  }
+
+  function install(){
+    if(deferredPWA){ deferredPWA.prompt(); deferredPWA.userChoice.then(()=>{ deferredPWA=null; document.getElementById('ibanner').classList.remove('on'); }); }
+  }
+
+  // ── NAVIGATION ──
+  function go(view){
+    ['dash','build','export'].forEach(v=>{
+      document.getElementById('v-'+v).classList.toggle('on', v===view);
+      document.getElementById('nb-'+v).classList.toggle('on', v===view);
+    });
+    document.getElementById('scroll').scrollTop=0;
+    if(view==='dash') _renderDash();
+  }
+
+  function goExport(){ go('export'); }
+
+  // ── DASHBOARD ──
+  function _renderDash(){
+    const total=quotes.length;
+    const p=quotes.filter(q=>q.status==='pending').length;
+    const c=quotes.filter(q=>q.status==='confirmed').length;
+    const d=quotes.filter(q=>q.status==='completed').length;
+    document.getElementById('stats').innerHTML=
+      `<div class="stat"><div class="stat-n" style="color:#b91c1c">${total}</div><div class="stat-l">Total</div></div>
+       <div class="stat"><div class="stat-n" style="color:#f59e0b">${p}</div><div class="stat-l">⏳ Pending</div></div>
+       <div class="stat"><div class="stat-n" style="color:#16a34a">${c}</div><div class="stat-l">✅ Confirmed</div></div>
+       <div class="stat"><div class="stat-n" style="color:#1d4ed8">${d}</div><div class="stat-l">🔵 Completed</div></div>`;
+    _renderList();
+  }
+
+  function filter(f){
+    filterMode=f;
+    document.querySelectorAll('.filter').forEach(b=>b.classList.remove('on'));
+    document.getElementById('f-'+f).classList.add('on');
+    _renderList();
+  }
+
+  function _renderList(){
+    const el=document.getElementById('qlist');
+    let list = filterMode==='all' ? [...quotes] : quotes.filter(q=>q.status===filterMode);
+    list.sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt));
+    if(!list.length){
+      el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">${filterMode==='all'?'No quotes yet.\nTap + New to start.':'No '+filterMode+' quotes.'}</div></div>`;
+      return;
+    }
+    el.innerHTML = list.map(q=>{
+      const d = new Date(q.savedAt).toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'});
+      const tbc = q.items.some(i=>!i.price);
+      return `<div class="qcard ${q.status}">
+        <div class="qc-top">
+          <div><div class="qc-name">${esc(q.client)}</div><div class="qc-ref">${esc(q.ref||'')}</div></div>
+          <div class="qc-date">${d}</div>
+        </div>
+        <div class="qc-site">${esc(q.site||'No site address')}</div>
+        <div class="status-pills">
+          <button class="pill pill-p${q.status==='pending'?' on':''}" onclick="App.setStatus(${q.id},'pending')">⏳ Pending</button>
+          <button class="pill pill-c${q.status==='confirmed'?' on':''}" onclick="App.setStatus(${q.id},'confirmed')">✅ Confirmed</button>
+          <button class="pill pill-d${q.status==='completed'?' on':''}" onclick="App.setStatus(${q.id},'completed')">🔵 Completed</button>
+          <button class="pill pill-r${q.status==='rejected'?' on':''}" onclick="App.setStatus(${q.id},'rejected')">❌ Rejected</button>
+        </div>
+        <div class="qc-bot">
+          <div class="qc-total">$${fmt(q.total)}${tbc?' + TBC':''}</div>
+          <div class="qc-count">${q.items.length} item${q.items.length!==1?'s':''}</div>
+        </div>
+        <div class="qc-actions">
+          <button class="btn btn-red btn-sm" onclick="App.loadQuote(${q.id})">✏️ Edit</button>
+          <button class="btn btn-ghost btn-sm" onclick="App.loadExport(${q.id})">⬇ Export</button>
+          <button class="btn btn-danger btn-sm" onclick="App.delQuote(${q.id})">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function setStatus(id,status){
+    const q=quotes.find(q=>q.id===id); if(!q) return;
+    q.status=status;
+    if(cid===id){ draft.status=status; _updateBar(); }
+    _persist(); _renderDash();
+    toast('Status → '+status.charAt(0).toUpperCase()+status.slice(1));
+  }
+
+  // ── NEW QUOTE ──
+  function newQuote(){
+    cid=null;
+    draft={client:'',hp:'',attn:'',site:'',ref:'',date:new Date().toISOString().split('T')[0],items:[],remark:'',status:'pending'};
+    ['i-client','i-hp','i-attn','i-site','i-remark'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('i-date').value=draft.date;
+    _nextRef();
+    selCat=null;
+    document.querySelectorAll('.cat').forEach(c=>c.classList.remove('on'));
+    document.getElementById('preset-panel').style.display='none';
+    _renderItems(); _catCounts(); _updateBar();
+    go('build');
+    toast('✨ New quote — '+draft.ref);
+  }
+
+  // ── CATEGORY ──
+  function selectCat(cat){
+    selCat=cat;
+    document.querySelectorAll('.cat').forEach(c=>c.classList.remove('on'));
+    document.getElementById('cat-'+cat).classList.add('on');
+    const C=CATS[cat];
+    document.getElementById('preset-title').textContent=C.icon+' '+C.label;
+    document.getElementById('preset-list').innerHTML = PRESETS[cat].map((it,i)=>
+      `<div class="preset" onclick="App.addPreset('${cat}',${i})">
+        <div class="preset-info"><div class="preset-name">${esc(it.n)}</div><div class="preset-unit">${it.u}</div></div>
+        ${it.p!==null?`<div class="preset-price">$${it.p.toLocaleString()}</div>`:'<div class="preset-price" style="color:#555">TBC</div>'}
+        <div class="preset-plus">+</div>
+      </div>`
+    ).join('');
+    document.getElementById('preset-panel').style.display='block';
+    setTimeout(()=>document.getElementById('preset-panel').scrollIntoView({behavior:'smooth',block:'start'}),80);
+  }
+
+  function _catCounts(){
+    Object.keys(CATS).forEach(cat=>{
+      const n=draft.items.filter(i=>i.cat===cat).length;
+      document.getElementById('cc-'+cat).textContent=n?n+'':'';
+    });
+  }
+
+  // ── ADD ITEMS ──
+  function addPreset(cat,idx){
+    const p=PRESETS[cat][idx];
+    draft.items.push({id:Date.now()+Math.random(),cat,name:p.n,desc:p.d,qty:p.q,unit:p.u,price:p.p,remark:'',photos:[]});
+    _renderItems(); _catCounts(); _autosave();
+    toast('✓ '+p.n);
+  }
+
+  function addCustom(){
+    const desc=document.getElementById('cf-desc').value.trim();
+    if(!desc){toast('⚠ Enter description first'); return;}
+    const cat=selCat||'other';
+    draft.items.push({
+      id:Date.now()+Math.random(), cat,
+      name:desc.length>50?desc.substring(0,50)+'…':desc, desc,
+      qty:parseFloat(document.getElementById('cf-qty').value)||1,
+      unit:document.getElementById('cf-unit').value,
+      price:parseFloat(document.getElementById('cf-price').value)||null,
+      remark:document.getElementById('cf-remark').value.trim(),
+      photos:[]
+    });
+    document.getElementById('cf-desc').value='';
+    document.getElementById('cf-qty').value='1';
+    document.getElementById('cf-price').value='';
+    document.getElementById('cf-remark').value='';
+    _renderItems(); _catCounts(); _autosave();
+    toast('✓ Item added');
+  }
+
+  // ── RENDER ITEMS ──
+  function _renderItems(){
+    const list=document.getElementById('ilist');
+    if(!draft.items.length){
+      document.getElementById('items-wrap').style.display='none';
+      return;
+    }
+    document.getElementById('items-wrap').style.display='block';
+    document.getElementById('items-sec-title').textContent=`Quote Items (${draft.items.length})`;
+    const UNITS=['NOS','JOB','FT','m²','Sqft','m','Set','Lot','Day','Hr','Step'];
+    list.innerHTML = draft.items.map(it=>{
+      const sub=(it.qty&&it.price)?it.qty*it.price:null;
+      const C=CATS[it.cat];
+      const opts=UNITS.map(u=>`<option${u===it.unit?' selected':''}>${u}</option>`).join('');
+      const photosHtml=it.photos.length
+        ?it.photos.map((p,pi)=>`<div class="ph"><img src="${p}" onclick="App.openPM('${p}')"/><button class="ph-x" onclick="App.delPhoto(${it.id},${pi})">✕</button></div>`).join('')+`<div class="ph-add" onclick="App.trigPhoto(${it.id})">📷</div>`
+        :'';
+      return `<div class="icard${it.remark?' has-remark':''}" id="ic-${it.id}">
+        <div class="ic-top">
+          <span class="ic-badge ${C.badge}">${C.icon} ${C.label}</span>
+          <div class="ic-desc">${esc(it.desc)}</div>
+          <button class="ic-del" onclick="App.delItem(${it.id})">✕</button>
+        </div>
+        <div class="ic-grid">
+          <div class="ic-field"><label>Qty</label><input type="number" value="${it.qty}" min="0" step="any" onchange="App.updateItem(${it.id},'qty',this.value)"/></div>
+          <div class="ic-field"><label>Unit</label><select onchange="App.updateItem(${it.id},'unit',this.value)">${opts}</select></div>
+          <div class="ic-field"><label>Unit $</label><input type="number" value="${it.price||''}" placeholder="TBC" min="0" step="0.01" onchange="App.updateItem(${it.id},'price',this.value)" style="text-align:right;font-family:var(--mono)"/></div>
+          <div class="ic-field"><label>Subtotal</label><div class="ic-sub" id="sub-${it.id}">${sub!==null?'$'+fmt(sub):'-'}</div></div>
+        </div>
+        <div class="ic-desc-edit"><label>Edit Description</label><textarea onchange="App.updateItem(${it.id},'desc',this.value)">${esc(it.desc)}</textarea></div>
+        <div class="ic-remark-row">
+          <div style="flex:1"><label>Remark</label><textarea placeholder="Note for this item..." onchange="App.updateItem(${it.id},'remark',this.value)">${esc(it.remark)}</textarea></div>
+          <div style="padding-top:22px;margin-left:6px"><button class="btn btn-ghost btn-sm" onclick="App.trigPhoto(${it.id})">📷</button></div>
+        </div>
+        ${it.photos.length?`<div class="ic-photos">${photosHtml}</div>`:''}
+      </div>`;
+    }).join('');
+    _calcTotals();
+  }
+
+  function updateItem(id,field,val){
+    const it=draft.items.find(i=>i.id===id); if(!it) return;
+    if(field==='qty'||field==='price') it[field]=parseFloat(val)||(field==='qty'?1:null);
+    else it[field]=val;
+    if(field==='qty'||field==='price'){
+      const sub=(it.qty&&it.price)?it.qty*it.price:null;
+      const el=document.getElementById('sub-'+id);
+      if(el) el.textContent=sub!==null?'$'+fmt(sub):'-';
+    }
+    if(field==='remark'&&val.trim()) document.getElementById('ic-'+id)?.classList.add('has-remark');
+    _calcTotals(); _autosave();
+  }
+
+  function delItem(id){
+    draft.items=draft.items.filter(i=>i.id!==id);
+    _renderItems(); _catCounts(); _autosave();
+    toast('Item removed');
+  }
+
+  function _calcTotals(){
+    let grand=0, html='';
+    Object.keys(CATS).forEach(cat=>{
+      const items=draft.items.filter(i=>i.cat===cat); if(!items.length) return;
+      const ct=items.reduce((s,i)=>s+(i.qty&&i.price?i.qty*i.price:0),0); grand+=ct;
+      const C=CATS[cat];
+      html+=`<div class="tot-row"><span class="tot-l">${C.icon} ${C.label} (${items.length})</span><span class="tot-v">${ct>0?'$'+fmt(ct):'TBC'}</span></div>`;
+    });
+    document.getElementById('cat-summary').innerHTML=html;
+    document.getElementById('grand-total').textContent=grand>0?'$'+fmt(grand):'TBC';
+  }
+
+  function _updateBar(){
+    const c=document.getElementById('i-client')?.value.trim()||draft.client;
+    document.getElementById('cq-name').textContent=c||'New Quote';
+    document.getElementById('cq-ref').textContent=draft.ref||'';
+    document.getElementById('bar-ref').textContent=draft.ref||'';
+    const badge=document.getElementById('cq-badge');
+    badge.className='sbadge '+STATUS_BADGE[draft.status||'pending'];
+    badge.textContent=STATUS_LABELS[draft.status||'pending'];
+    document.getElementById('cq-sub').textContent=cid?'Autosaved ✓':'Draft';
+  }
+
+  // ── INPUT CHANGE HANDLER ──
+  document.addEventListener('input', e=>{
+    if(['i-client','i-hp','i-attn','i-site','i-date'].includes(e.target.id)) { _updateBar(); _autosave(); }
+    if(e.target.id==='i-remark') _autosave();
+  });
+
+  // ── AUTOSAVE ──
+  function _autosave(){
+    clearTimeout(autoTimer);
+    autoTimer=setTimeout(()=>{
+      const c=document.getElementById('i-client')?.value.trim();
+      if(!c&&!draft.items.length) return;
+      _save(true);
+    },800);
+  }
+
+  function _save(silent=false){
+    draft.client=document.getElementById('i-client').value.trim()||'Unnamed Client';
+    draft.hp    =document.getElementById('i-hp').value.trim();
+    draft.attn  =document.getElementById('i-attn').value.trim();
+    draft.site  =document.getElementById('i-site').value.trim();
+    draft.date  =document.getElementById('i-date').value;
+    draft.remark=document.getElementById('i-remark').value.trim();
+    const q={
+      id:cid||Date.now(),
+      client:draft.client, hp:draft.hp, attn:draft.attn,
+      site:draft.site, ref:draft.ref, date:draft.date,
+      remark:draft.remark, status:draft.status,
+      items:JSON.parse(JSON.stringify(draft.items)),
+      savedAt:new Date().toISOString(),
+      total:draft.items.reduce((s,i)=>s+(i.qty&&i.price?i.qty*i.price:0),0)
+    };
+    const idx=quotes.findIndex(x=>x.id===q.id);
+    if(cid&&idx>=0) quotes[idx]=q; else{ quotes.unshift(q); cid=q.id; }
+    _persist(); _updateBar();
+    const el=document.getElementById('bar-saved');
+    el.style.opacity='1'; setTimeout(()=>el.style.opacity='0',1600);
+    if(!silent) toast('💾 Saved!');
+  }
+
+  function _persist(){
+    try{ localStorage.setItem('tq_quotes',JSON.stringify(quotes)); }
+    catch(e){ toast('⚠ Storage full — delete old quotes!'); }
+  }
+
+  // ── LOAD / DELETE ──
+  function loadQuote(id){
+    const q=quotes.find(q=>q.id===id); if(!q) return;
+    cid=q.id; draft={...q,items:JSON.parse(JSON.stringify(q.items))};
+    document.getElementById('i-client').value=q.client||'';
+    document.getElementById('i-hp').value=q.hp||'';
+    document.getElementById('i-attn').value=q.attn||'';
+    document.getElementById('i-site').value=q.site||'';
+    document.getElementById('i-ref').value=q.ref||'';
+    document.getElementById('i-date').value=q.date||'';
+    document.getElementById('i-remark').value=q.remark||'';
+    document.getElementById('bar-ref').textContent=q.ref||'';
+    selCat=null;
+    document.querySelectorAll('.cat').forEach(c=>c.classList.remove('on'));
+    document.getElementById('preset-panel').style.display='none';
+    _renderItems(); _catCounts(); _updateBar();
+    go('build');
+    toast('📂 '+q.client+' ('+q.ref+')');
+  }
+
+  function loadExport(id){ loadQuote(id); setTimeout(()=>go('export'),100); }
+
+  function delQuote(id){
+    if(!confirm('Delete this quote?')) return;
+    quotes=quotes.filter(q=>q.id!==id);
+    if(cid===id) cid=null;
+    _persist(); _renderDash();
+    toast('🗑 Deleted');
+  }
+
+  // ── PHOTOS ──
+  function trigPhoto(id){ photoTarget=id; document.getElementById('file-input').click(); }
+
+  function handlePhoto(e){
+    const file=e.target.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      const it=draft.items.find(i=>i.id===photoTarget);
+      if(it){ it.photos.push(ev.target.result); _renderItems(); _autosave(); toast('📷 Photo added'); }
+    };
+    r.readAsDataURL(file); e.target.value='';
+  }
+
+  function delPhoto(itemId,idx){
+    const it=draft.items.find(i=>i.id===itemId);
+    if(it){ it.photos.splice(idx,1); _renderItems(); _autosave(); toast('Photo removed'); }
+  }
+
+  function openPM(src){ document.getElementById('phimg').src=src; document.getElementById('phmodal').classList.add('on'); }
+  function closePM(){ document.getElementById('phmodal').classList.remove('on'); }
+
+  // ════════════════════════════════════════════════
+  // EXPORTS
+  // ════════════════════════════════════════════════
+
+  // ── EXCEL (built-in, no external lib needed) ──
+  function exportExcel(){
+    if(!draft.items.length){toast('⚠ No items to export');return;}
+    spin('Generating Excel...');
+    setTimeout(()=>{
+      try{
+        const rows=[];
+        rows.push([CO.name]);
+        rows.push([`Co. Reg. No. ${CO.reg}  |  ${CO.addr}`]);
+        rows.push([`Email: ${CO.email}  |  HP: ${CO.hp}  |  GST Reg: ${CO.gst}`]);
+        rows.push([]);
+        rows.push(['QUOTATION']);
+        rows.push([]);
+        rows.push(['Client:',draft.client,'','Ref:',draft.ref]);
+        rows.push(['HP:',draft.hp,'','Date:',draft.date]);
+        if(draft.attn) rows.push(['Attn:',draft.attn]);
+        rows.push(['Subject:',draft.site]);
+        rows.push([]);
+        rows.push(['#','Description','QTY','UOM','Unit Price (SGD)','Sub Total (SGD)','Remark']);
+        let no=1;
+        Object.keys(CATS).forEach(cat=>{
+          const items=draft.items.filter(i=>i.cat===cat);
+          if(!items.length) return;
+          rows.push(['',CATS[cat].label.toUpperCase(),'','','','','']);
+          items.forEach(it=>{
+            const sub=(it.qty&&it.price)?it.qty*it.price:null;
+            rows.push([no++,it.desc,it.qty,it.unit,it.price!==null?it.price:'TBC',sub!==null?sub:'TBC',it.remark||'']);
+          });
+        });
+        rows.push([]);
+        const grand=draft.items.reduce((s,i)=>s+(i.qty&&i.price?i.qty*i.price:0),0);
+        const hasTBC=draft.items.some(i=>!i.price);
+        rows.push(['','','','','TOTAL (SGD)',grand,'']);
+        if(hasTBC) rows.push(['','','','','Note:','Above total excludes TBC items','']);
+        rows.push([]);
+        if(draft.remark) rows.push(['Remarks:',draft.remark]);
+        rows.push(['','','','','','(Preliminary scratch quote – subject to final confirmation)']);
+
+        // Build CSV
+        const csv=rows.map(r=>r.map(c=>{
+          const s=String(c===null||c===undefined?'':c);
+          return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
+        }).join(',')).join('\n');
+
+        const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+        _dl(blob,`TK_Quote_${draft.ref}_${draft.client.replace(/\s+/g,'_')}.csv`);
+        unspin(); toast('📊 Excel/CSV downloaded!');
+      }catch(err){ unspin(); toast('⚠ Error: '+err.message); }
+    },100);
+  }
+
+  // ── PDF (canvas-based, pure JS, no library needed) ──
+  async function exportPDF(){
+    if(!draft.items.length){toast('⚠ No items to export');return;}
+    spin('Generating PDF...');
+    await new Promise(r=>setTimeout(r,100));
+    try{
+      // Build an HTML page and print-to-PDF via a new window
+      const dateStr=draft.date?new Date(draft.date).toLocaleDateString('en-SG',{day:'2-digit',month:'long',year:'numeric'}):new Date().toLocaleDateString('en-SG',{day:'2-digit',month:'long',year:'numeric'});
+      let rows='';
+      let grand=0,hasTBC=false,no=1;
+      Object.keys(CATS).forEach(cat=>{
+        const items=draft.items.filter(i=>i.cat===cat);
+        if(!items.length) return;
+        rows+=`<tr><td colspan="6" class="sec-row">${CATS[cat].label.toUpperCase()}</td></tr>`;
+        items.forEach(it=>{
+          const sub=(it.qty&&it.price)?it.qty*it.price:null;
+          if(sub!==null) grand+=sub; else hasTBC=true;
+          const photosHtml=it.photos.map(p=>`<img src="${p}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;margin:2px;border:1px solid #ddd"/>`).join('');
+          rows+=`<tr>
+            <td style="text-align:center;font-weight:700">${no++}</td>
+            <td>${it.desc.replace(/\n/g,'<br>')}${it.remark?`<br><span style="color:#888;font-size:11px">★ ${it.remark}</span>`:''}${photosHtml?`<div style="margin-top:6px">${photosHtml}</div>`:''}</td>
+            <td style="text-align:center">${it.qty}</td>
+            <td style="text-align:center">${it.unit}</td>
+            <td style="text-align:right">${it.price!==null?fmtP(it.price):'TBC'}</td>
+            <td style="text-align:right;font-weight:700">${sub!==null?fmtP(sub):'TBC'}</td>
+          </tr>`;
+        });
+      });
+
+      const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<title>TK Quote ${draft.ref}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#222;padding:20px}
+.header{text-align:center;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #b91c1c}
+.tk-logo{display:inline-block;background:#b91c1c;color:#fff;font-weight:900;font-size:18px;padding:8px 14px;border-radius:6px;margin-bottom:8px}
+.co-name{font-size:20px;font-weight:900;color:#111;margin-bottom:4px}
+.co-detail{font-size:10.5px;color:#555;line-height:1.7}
+.meta{display:flex;justify-content:space-between;margin-bottom:16px;gap:20px}
+.meta-left p{font-size:12px;margin-bottom:3px}
+.meta-right{border:1.5px solid #b91c1c;border-radius:6px;padding:12px 16px;min-width:200px;background:#fff9f9}
+.meta-right .q-title{font-size:16px;font-weight:800;color:#b91c1c;margin-bottom:8px}
+.meta-right p{font-size:12px;margin-bottom:3px}
+b{font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+thead tr{background:#b91c1c;color:#fff}
+thead th{padding:8px 7px;text-align:left;font-weight:700}
+.sec-row{background:#2d2d2d;color:#fff;font-weight:700;padding:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+tbody tr:nth-child(even){background:#f8f8f8}
+td{padding:7px;border-bottom:1px solid #eee;vertical-align:top}
+.total-row{background:#b91c1c!important;color:#fff;font-size:14px;font-weight:900}
+.total-row td{padding:10px 8px}
+.remarks{margin-top:14px;padding:12px;background:#fff9f9;border:1px solid #fca5a5;border-radius:6px}
+.footer{margin-top:16px;text-align:center;font-size:10px;color:#999;border-top:1px solid #ddd;padding-top:10px}
+@media print{body{padding:10px}@page{margin:10mm}}
+</style></head><body>
+<div class="header">
+  <div class="tk-logo">TK</div>
+  <div class="co-name">${CO.name}</div>
+  <div class="co-detail">
+    Co. Reg. No. ${CO.reg}<br>
+    Address: ${CO.addr}<br>
+    Email: ${CO.email} &nbsp;|&nbsp; HP: ${CO.hp}<br>
+    GST Registration Number: ${CO.gst}
+  </div>
+</div>
+<div class="meta">
+  <div class="meta-left">
+    <p><b>To:</b> ${esc(draft.client||'—')}</p>
+    ${draft.hp?`<p><b>HP:</b> ${esc(draft.hp)}</p>`:''}
+    ${draft.attn?`<p><b>Attn:</b> ${esc(draft.attn)}</p>`:''}
+    ${draft.site?`<p><b>Subject:</b> ${esc(draft.site)}</p>`:''}
+  </div>
+  <div class="meta-right">
+    <div class="q-title">Quotation</div>
+    <p><b>Date:</b> ${dateStr}</p>
+    <p><b>Ref:</b> ${esc(draft.ref||'—')}</p>
+    <p><b>Status:</b> <span style="color:#b91c1c;font-weight:700;text-transform:uppercase">${draft.status||'Pending'}</span></p>
+  </div>
+</div>
+<table>
+  <thead><tr><th style="width:30px">#</th><th>Description</th><th style="width:40px;text-align:center">QTY</th><th style="width:44px;text-align:center">UOM</th><th style="width:80px;text-align:right">Unit Price</th><th style="width:80px;text-align:right">Sub Total</th></tr></thead>
+  <tbody>${rows}
+  <tr class="total-row">
+    <td colspan="5" style="text-align:right">TOTAL (SGD)</td>
+    <td style="text-align:right">$${fmtP(grand)}${hasTBC?' + TBC':''}</td>
+  </tr>
+  </tbody>
+</table>
+${draft.remark?`<div class="remarks"><b>Remarks / Conditions:</b><br>${esc(draft.remark).replace(/\n/g,'<br>')}</div>`:''}
+<div class="footer">
+  ${CO.name} &nbsp;|&nbsp; ${CO.addr} &nbsp;|&nbsp; ${CO.email} &nbsp;|&nbsp; HP: ${CO.hp}<br>
+  This is a preliminary scratch quotation subject to final confirmation.
+</div>
+</body></html>`;
+
+      const win=window.open('','_blank','width=800,height=900');
+      if(!win){ unspin(); toast('⚠ Allow popups to generate PDF'); return; }
+      win.document.write(html);
+      win.document.close();
+      win.onload=()=>{ win.print(); };
+      unspin(); toast('📄 PDF — use Print → Save as PDF');
+    }catch(err){ unspin(); console.error(err); toast('⚠ Error: '+err.message); }
+  }
+
+  function fmtP(n){ return Number(n).toLocaleString('en-SG',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  // ── WORD (HTML-based .doc that Word opens) ──
+  async function exportWord(){
+    if(!draft.items.length){toast('⚠ No items to export');return;}
+    spin('Generating Word doc...');
+    await new Promise(r=>setTimeout(r,100));
+    try{
+      const dateStr=draft.date?new Date(draft.date).toLocaleDateString('en-SG',{day:'2-digit',month:'long',year:'numeric'}):new Date().toLocaleDateString('en-SG',{day:'2-digit',month:'long',year:'numeric'});
+      let rows='';
+      let grand=0,hasTBC=false,no=1;
+      Object.keys(CATS).forEach(cat=>{
+        const items=draft.items.filter(i=>i.cat===cat);
+        if(!items.length) return;
+        rows+=`<tr style="background:#2d2d2d"><td colspan="6" style="color:#fff;font-weight:700;padding:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.5px">${CATS[cat].label.toUpperCase()}</td></tr>`;
+        items.forEach((it,ri)=>{
+          const sub=(it.qty&&it.price)?it.qty*it.price:null;
+          if(sub!==null) grand+=sub; else hasTBC=true;
+          const bg=ri%2===0?'#ffffff':'#f7f7f7';
+          rows+=`<tr style="background:${bg}">
+            <td style="text-align:center;font-weight:700;padding:6px;border:1px solid #ddd">${no++}</td>
+            <td style="padding:6px;border:1px solid #ddd">${esc(it.desc)}${it.remark?`<br><span style="color:#888;font-size:10px">★ ${esc(it.remark)}</span>`:''}</td>
+            <td style="text-align:center;padding:6px;border:1px solid #ddd">${it.qty}</td>
+            <td style="text-align:center;padding:6px;border:1px solid #ddd">${it.unit}</td>
+            <td style="text-align:right;padding:6px;border:1px solid #ddd">${it.price!==null?fmtP(it.price):'TBC'}</td>
+            <td style="text-align:right;font-weight:700;padding:6px;border:1px solid #ddd">${sub!==null?fmtP(sub):'TBC'}</td>
+          </tr>`;
+        });
+      });
+
+      const html=`<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="UTF-8"/><title>TK Quote ${esc(draft.ref)}</title>
+<style>
+body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#222}
+.header{text-align:center;margin-bottom:14pt;padding-bottom:10pt;border-bottom:2pt solid #b91c1c}
+.co-name{font-size:18pt;font-weight:900;color:#111}
+.co-detail{font-size:9pt;color:#555;line-height:1.8}
+.q-title{font-size:14pt;font-weight:900;color:#b91c1c;margin-bottom:6pt}
+table{width:100%;border-collapse:collapse;font-size:10pt}
+thead tr{background:#b91c1c;color:#fff}
+thead th{padding:6pt 5pt;text-align:left}
+.total-row{background:#b91c1c;color:#fff;font-weight:900;font-size:12pt}
+</style></head><body>
+<div class="header">
+  <div style="display:inline-block;background:#b91c1c;color:#fff;font-weight:900;font-size:14pt;padding:6pt 12pt;border-radius:4pt;margin-bottom:6pt">TK</div>
+  <div class="co-name">${CO.name}</div>
+  <div class="co-detail">
+    Co. Reg. No. ${CO.reg}<br>
+    Address: ${CO.addr}<br>
+    Email: ${CO.email} | HP: ${CO.hp}<br>
+    GST Registration Number: ${CO.gst}
+  </div>
+</div>
+<table style="margin-bottom:14pt;border:none;width:100%"><tr>
+  <td style="width:55%;vertical-align:top;border:none;padding:0 12pt 0 0">
+    <p><b>To:</b> ${esc(draft.client||'—')}</p>
+    ${draft.hp?`<p><b>HP:</b> ${esc(draft.hp)}</p>`:''}
+    ${draft.attn?`<p><b>Attn:</b> ${esc(draft.attn)}</p>`:''}
+    ${draft.site?`<p><b>Subject:</b> ${esc(draft.site)}</p>`:''}
+  </td>
+  <td style="width:45%;border:1.5pt solid #b91c1c;border-radius:4pt;padding:10pt;background:#fff9f9;vertical-align:top">
+    <div class="q-title">Quotation</div>
+    <p><b>Date:</b> ${dateStr}</p>
+    <p><b>Ref:</b> ${esc(draft.ref||'—')}</p>
+    <p><b>Status:</b> <span style="color:#b91c1c;font-weight:700;text-transform:uppercase">${draft.status||'Pending'}</span></p>
+  </td>
+</tr></table>
+<table>
+  <thead><tr>
+    <th style="width:5%">#</th>
+    <th style="width:45%">Description</th>
+    <th style="width:8%;text-align:center">QTY</th>
+    <th style="width:8%;text-align:center">UOM</th>
+    <th style="width:14%;text-align:right">Unit Price</th>
+    <th style="width:14%;text-align:right">Sub Total</th>
+  </tr></thead>
+  <tbody>${rows}
+    <tr class="total-row">
+      <td colspan="5" style="text-align:right;padding:8pt">TOTAL (SGD)</td>
+      <td style="text-align:right;padding:8pt">$${fmtP(grand)}${hasTBC?' + TBC':''}</td>
+    </tr>
+  </tbody>
+</table>
+${draft.remark?`<div style="margin-top:12pt;padding:10pt;background:#fff9f9;border:1pt solid #fca5a5;border-radius:4pt"><b>Remarks / Conditions:</b><br>${esc(draft.remark).replace(/\n/g,'<br>')}</div>`:''}
+<p style="margin-top:16pt;text-align:center;font-size:9pt;color:#999">${CO.name} | ${CO.addr} | ${CO.email} | HP: ${CO.hp}</p>
+<p style="text-align:center;font-size:9pt;color:#999;font-style:italic">This is a preliminary scratch quotation subject to final confirmation.</p>
+</body></html>`;
+
+      const blob=new Blob([html],{type:'application/msword'});
+      _dl(blob,`TK_Quote_${draft.ref}_${draft.client.replace(/\s+/g,'_')}.doc`);
+      unspin(); toast('📝 Word doc downloaded!');
+    }catch(err){ unspin(); toast('⚠ Error: '+err.message); }
+  }
+
+  // ── TEXT ──
+  function exportText(){
+    if(!draft.items.length){toast('⚠ No items to export');return;}
+    const dateStr=draft.date?new Date(draft.date).toLocaleDateString('en-SG',{day:'2-digit',month:'long',year:'numeric'}):'-';
+    let lines=[CO.name,`Co. Reg. No. ${CO.reg}`,'','════════════════════════════','        QUOTATION','════════════════════════════',
+      `Ref     : ${draft.ref||'—'}`,`Date    : ${dateStr}`,`Client  : ${draft.client||'—'}`,`HP      : ${draft.hp||'—'}`];
+    if(draft.attn) lines.push(`Attn    : ${draft.attn}`);
+    lines.push(`Subject : ${draft.site||'—'}`, '');
+    let grand=0,tbc=false,no=1;
+    Object.keys(CATS).forEach(cat=>{
+      const items=draft.items.filter(i=>i.cat===cat); if(!items.length) return;
+      lines.push('────────────────────────────',CATS[cat].label.toUpperCase(),'────────────────────────────');
+      items.forEach(it=>{
+        const sub=(it.qty&&it.price)?it.qty*it.price:null;
+        if(sub!==null) grand+=sub; else tbc=true;
+        lines.push(`${no++}. ${it.desc}`,`   ${it.qty} ${it.unit}  @  ${it.price!==null?'$'+fmtP(it.price):'TBC'}  =  ${sub!==null?'$'+fmtP(sub):'TBC'}`);
+        if(it.remark) lines.push(`   ★ ${it.remark}`);
+        lines.push('');
+      });
+    });
+    lines.push('════════════════════════════',`TOTAL: $${fmtP(grand)}${tbc?' + TBC items':''}`, '════════════════════════════');
+    if(draft.remark){lines.push('','Remarks:',draft.remark);}
+    lines.push('',`Prepared: ${new Date().toLocaleDateString('en-SG')}`,'(Scratch Quote – Subject to Final Confirmation)');
+    const text=lines.join('\n');
+    document.getElementById('txtbox').textContent=text;
+    document.getElementById('txt-card').style.display='block';
+    setTimeout(()=>document.getElementById('txt-card').scrollIntoView({behavior:'smooth',block:'start'}),100);
+  }
+
+  function copyText(){
+    const t=document.getElementById('txtbox').textContent;
+    navigator.clipboard.writeText(t).then(()=>toast('📋 Copied!')).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      toast('📋 Copied!');
+    });
+  }
+
+  function _dl(blob,name){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=name;a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }
+
+  // ── UTILS ──
+  function spin(msg){ document.getElementById('spin-label').textContent=msg||'Generating...'; document.getElementById('spin').classList.add('on'); }
+  function unspin(){ document.getElementById('spin').classList.remove('on'); }
+
+  let _tt;
+  function toast(msg){
+    const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');
+    clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('on'),2400);
+  }
+
+  // ── SERVICE WORKER ──
+  if('serviceWorker' in navigator){
+    const sw=`const V='tq1';self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',()=>self.clients.claim());self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))))`;
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+  }
+
+  return { init, go, goExport, install, filter, newQuote, loadQuote, loadExport, delQuote, setStatus,
+           selectCat, addPreset, addCustom, updateItem, delItem,
+           trigPhoto, handlePhoto, delPhoto, openPM, closePM,
+           exportPDF, exportExcel, exportWord, exportText, copyText };
+
+})();
+
+// BOOT
+document.addEventListener('DOMContentLoaded', ()=>App.init());
+</script>
+</body>
+</html>
